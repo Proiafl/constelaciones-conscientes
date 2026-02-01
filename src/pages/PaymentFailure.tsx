@@ -16,7 +16,7 @@ const PaymentFailure = () => {
             case "pending":
                 return "Tu pago está pendiente de confirmación. Te notificaremos cuando se procese.";
             default:
-                return "Hubo un problema al procesar tu pago. Por favor, intenta nuevamente.";
+                return "El pago no fue procesado y el servicio no fue agendado.";
         }
     };
 
@@ -26,7 +26,7 @@ const PaymentFailure = () => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="bg-background rounded-3xl shadow-medium p-8 sm:p-12 max-w-lg w-full text-center"
+                className="bg-background rounded-3xl shadow-medium p-8 sm:p-12 max-w-lg w-full text-center border border-border/50"
             >
                 {/* Error Icon */}
                 <motion.div
@@ -40,7 +40,7 @@ const PaymentFailure = () => {
 
                 {/* Title */}
                 <h1 className="font-display text-2xl sm:text-3xl font-semibold text-foreground mb-3">
-                    Pago No Completado
+                    Pago No Procesado
                 </h1>
 
                 {/* Error Message */}
@@ -49,7 +49,7 @@ const PaymentFailure = () => {
                 </p>
 
                 {/* Reference Info */}
-                {paymentId && (
+                {paymentId && paymentId !== "null" && (
                     <div className="bg-secondary rounded-2xl p-4 mb-6">
                         <p className="text-xs text-muted-foreground">
                             Referencia: {paymentId}
@@ -68,7 +68,7 @@ const PaymentFailure = () => {
                     </Link>
 
                     <a
-                        href="https://wa.me/5491112345678?text=Hola, tuve un problema con mi pago"
+                        href="https://wa.me/5491179652013?text=Hola, tuve un problema con mi pago"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn-secondary w-full inline-flex items-center justify-center gap-2 py-3"

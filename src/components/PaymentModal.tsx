@@ -77,12 +77,12 @@ export const PaymentModal = ({
                 throw new Error(data.error);
             }
 
-            if (data?.sandbox_init_point) {
-                // Redirect to MercadoPago checkout (sandbox for testing)
-                window.location.href = data.sandbox_init_point;
-            } else if (data?.init_point) {
-                // Production redirect
+            if (data?.init_point) {
+                // Production redirect (Priority)
                 window.location.href = data.init_point;
+            } else if (data?.sandbox_init_point) {
+                // Return to sandbox if no production link (fallback)
+                window.location.href = data.sandbox_init_point;
             } else {
                 throw new Error("No redirect URL received. Response: " + JSON.stringify(data));
             }

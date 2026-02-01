@@ -1,13 +1,25 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Calendar, Clock, Video, MapPin, Send } from "lucide-react";
+import { Calendar, Clock, Video, MapPin, Send, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/lib/supabase";
 
 const Booking = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -21,32 +33,84 @@ const Booking = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    toast.success("¡Solicitud enviada! Te contactaré pronto para confirmar tu cita.");
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      service: "",
-      modality: "",
-      message: "",
-    });
-    setIsSubmitting(false);
+
+    try {
+      const { error } = await supabase
+        .from('inquiries')
+        .insert({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          service_interest: formData.service,
+          modality: formData.modality,
+          message: formData.message,
+        });
+
+      if (error) throw error;
+
+      setIsSuccess(true);
+      toast.success("¡Consulta enviada! Te contactaré pronto.");
+
+      setTimeout(() => {
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          service: "",
+          modality: "",
+          message: "",
+        });
+        setIsSubmitting(false);
+        setIsSuccess(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Error sending inquiry:', error);
+      toast.error("Hubo un error al enviar tu consulta. Intenta nuevamente.");
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const infoItems = [
+    {
+      icon: Calendar,
+      title: "Horarios de Atención",
+      description: "Lunes a Viernes 18:30 - 20:30 | Sábados 10:00 - 12:00",
+    },
+    {
+      icon: Video,
+      title: "Sesiones Online",
+      description: "Zoom o Google Meet con grabación disponible",
+    },
+    {
+      icon: MapPin,
+      title: "Sesiones Presenciales",
+      description: "Consultorio en zona céntrica (a confirmar ubicación)",
+    },
+    {
+      icon: Clock,
+      title: "Respuesta Rápida",
+      description: "Te contacto en menos de 24 horas",
+    },
+  ];
+
   return (
-    <section id="reservar" className="section-padding bg-gradient-warm" ref={ref}>
-      <div className="container-custom">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+    <section id="reservar" className="section-padding bg-gradient-warm section-glow overflow-hidden" ref={ref}>
+      {/* Glow orbs */}
+      <div className="glow-orb glow-orb-primary w-80 h-80 -top-20 right-1/4" />
+      <div className="glow-orb glow-orb-secondary w-96 h-96 bottom-1/4 -left-20" style={{ animationDelay: '3.5s' }} />
+
+      <div className="container-custom relative z-10">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16">
           {/* Info */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -54,73 +118,37 @@ const Booking = () => {
             transition={{ duration: 0.8 }}
           >
             <span className="inline-block text-accent font-medium text-sm uppercase tracking-wider mb-4">
-              Reservar
+              ¿Tienes dudas?
             </span>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-6">
-              Agenda tu <span className="text-primary">primera sesión</span>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-4 sm:mb-6">
+              Pregunta antes de tu <span className="text-primary">primera sesión</span>
             </h2>
-            <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-              Completa el formulario y me pondré en contacto contigo en las próximas
-              24 horas para coordinar los detalles de tu sesión. La primera consulta
-              incluye una breve entrevista para conocer tu situación.
+            <p className="text-muted-foreground text-base sm:text-lg mb-6 sm:mb-8 leading-relaxed">
+              Completa el formulario y me pondré en contacto contigo en las próximas 24 horas para responder tus dudas y darte los detalles de tu sesión. La primera consulta incluye una breve entrevista para conocer tu situación.
             </p>
 
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-sage-light rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <Calendar className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-display font-semibold text-foreground mb-1">
-                    Horarios Flexibles
-                  </h4>
-                  <p className="text-muted-foreground">
-                    Lunes a Viernes de 9:00 a 20:00 | Sábados de 10:00 a 15:00
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-sage-light rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <Video className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-display font-semibold text-foreground mb-1">
-                    Sesiones Online
-                  </h4>
-                  <p className="text-muted-foreground">
-                    Zoom o Google Meet con grabación disponible
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-sage-light rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-display font-semibold text-foreground mb-1">
-                    Sesiones Presenciales
-                  </h4>
-                  <p className="text-muted-foreground">
-                    Consultorio en zona céntrica (a confirmar ubicación)
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-sage-light rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-display font-semibold text-foreground mb-1">
-                    Respuesta Rápida
-                  </h4>
-                  <p className="text-muted-foreground">
-                    Te contacto en menos de 24 horas
-                  </p>
-                </div>
-              </div>
+            <div className="space-y-4 sm:space-y-6">
+              {infoItems.map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={isInView ? { opacity: 1, x: 0 } : {}}
+                  transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                  className="flex items-start gap-3 sm:gap-4 group"
+                >
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-sage-light rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 hover-glow transition-smooth">
+                    <item.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-display font-semibold text-foreground text-sm sm:text-base mb-0.5 sm:mb-1">
+                      {item.title}
+                    </h4>
+                    <p className="text-muted-foreground text-xs sm:text-sm">
+                      {item.description}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
 
@@ -132,137 +160,129 @@ const Booking = () => {
           >
             <form
               onSubmit={handleSubmit}
-              className="bg-background rounded-3xl p-8 shadow-medium"
+              className="bg-background rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-medium card-glow"
             >
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-foreground mb-2"
-                  >
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium">
                     Nombre completo *
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="text"
                     id="name"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                     placeholder="Tu nombre"
+                    className="rounded-xl"
                   />
                 </div>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-foreground mb-2"
-                  >
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">
                     Email *
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="email"
                     id="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                     placeholder="tu@email.com"
+                    className="rounded-xl"
                   />
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-foreground mb-2"
-                  >
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-medium">
                     Teléfono / WhatsApp *
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="tel"
                     id="phone"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                     placeholder="+54 11 1234-5678"
+                    className="rounded-xl"
                   />
                 </div>
-                <div>
-                  <label
-                    htmlFor="service"
-                    className="block text-sm font-medium text-foreground mb-2"
-                  >
+                <div className="space-y-2">
+                  <Label htmlFor="service" className="text-sm font-medium">
                     Tipo de sesión *
-                  </label>
-                  <select
-                    id="service"
-                    name="service"
+                  </Label>
+                  <Select
                     value={formData.service}
-                    onChange={handleChange}
+                    onValueChange={(value) => handleSelectChange("service", value)}
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   >
-                    <option value="">Seleccionar...</option>
-                    <option value="individual">Sesión Individual</option>
-                    <option value="pareja">Sesión de Pareja</option>
-                    <option value="taller">Taller Grupal</option>
-                    <option value="presencial">Constelación Presencial</option>
-                  </select>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Seleccionar..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Sesión Individual</SelectItem>
+                      <SelectItem value="pareja">Sesión de Pareja</SelectItem>
+                      <SelectItem value="taller">Taller Grupal</SelectItem>
+                      <SelectItem value="presencial">Constelación Presencial</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label
-                  htmlFor="modality"
-                  className="block text-sm font-medium text-foreground mb-2"
-                >
+              <div className="mb-4 space-y-2">
+                <Label htmlFor="modality" className="text-sm font-medium">
                   Modalidad preferida *
-                </label>
-                <select
-                  id="modality"
-                  name="modality"
+                </Label>
+                <Select
                   value={formData.modality}
-                  onChange={handleChange}
+                  onValueChange={(value) => handleSelectChange("modality", value)}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 >
-                  <option value="">Seleccionar...</option>
-                  <option value="online">Online (Zoom/Meet)</option>
-                  <option value="presencial">Presencial</option>
-                  <option value="cualquiera">Sin preferencia</option>
-                </select>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Seleccionar..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="online">Online (Zoom/Meet)</SelectItem>
+                    <SelectItem value="presencial">Presencial</SelectItem>
+                    <SelectItem value="cualquiera">Sin preferencia</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="mb-6">
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-foreground mb-2"
-                >
+              <div className="mb-6 space-y-2">
+                <Label htmlFor="message" className="text-sm font-medium">
                   ¿Qué te gustaría trabajar? (opcional)
-                </label>
-                <textarea
+                </Label>
+                <Textarea
                   id="message"
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
                   rows={4}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
                   placeholder="Cuéntame brevemente sobre tu situación..."
+                  className="rounded-xl resize-none"
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting || isSuccess}
+                className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed hover-lift transition-smooth active:scale-[0.98]"
               >
                 {isSubmitting ? (
-                  "Enviando..."
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Enviando...
+                  </>
+                ) : isSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    ¡Enviado!
+                  </>
                 ) : (
                   <>
                     <Send className="w-5 h-5" />

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, MessageCircle, Calendar, Sparkles, Heart } from "lucide-react";
 import therapistConstellation from "@/assets/therapist-constellation.jpg";
 
 const Constellations = () => {
@@ -17,13 +17,45 @@ const Constellations = () => {
     "Encontrar tu lugar en el sistema familiar",
   ];
 
+  const steps = [
+    {
+      icon: MessageCircle,
+      step: "01",
+      title: "Contacto Inicial",
+      description: "Conversamos sobre tu situación y lo que deseas trabajar. Resolvemos tus dudas y evaluamos juntos el mejor enfoque.",
+    },
+    {
+      icon: Calendar,
+      step: "02",
+      title: "Agenda tu Sesión",
+      description: "Elegimos la fecha y modalidad ideal para ti: individual, grupal, presencial u online.",
+    },
+    {
+      icon: Sparkles,
+      step: "03",
+      title: "La Constelación",
+      description: "En un espacio seguro y contenedor, trabajamos tu tema. La constelación revela dinámicas ocultas y abre caminos de solución.",
+    },
+    {
+      icon: Heart,
+      step: "04",
+      title: "Integración",
+      description: "El proceso continúa después de la sesión. Te acompaño en la integración de los movimientos sanadores.",
+    },
+  ];
+
   return (
     <section
       id="constelaciones"
-      className="section-padding bg-gradient-warm"
+      className="section-padding bg-gradient-warm section-glow overflow-hidden"
       ref={ref}
     >
-      <div className="container-custom">
+      {/* Glow orbs */}
+      <div className="glow-orb glow-orb-primary w-72 h-72 top-20 right-10" />
+      <div className="glow-orb glow-orb-secondary w-80 h-80 bottom-1/4 -left-20" style={{ animationDelay: '4s' }} />
+
+      <div className="container-custom relative z-10">
+        {/* Main Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -43,7 +75,8 @@ const Constellations = () => {
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        {/* Benefits Section */}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24">
           {/* Content */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -55,8 +88,8 @@ const Constellations = () => {
               Beneficios de las Constelaciones
             </h3>
             <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-              A través de las constelaciones podemos acceder a información del 
-              inconsciente familiar que nos afecta sin que lo sepamos. Al traer 
+              A través de las constelaciones podemos acceder a información del
+              inconsciente familiar que nos afecta sin que lo sepamos. Al traer
               luz a estos patrones, podemos liberarlos y vivir de manera más plena.
             </p>
 
@@ -74,16 +107,6 @@ const Constellations = () => {
                 </motion.li>
               ))}
             </ul>
-
-            <motion.a
-              href="#reservar"
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.8 }}
-              className="btn-accent inline-block mt-8"
-            >
-              Comenzar mi sanación
-            </motion.a>
           </motion.div>
 
           {/* Image */}
@@ -105,6 +128,133 @@ const Constellations = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Process Section - Cómo Trabajamos */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="text-center max-w-3xl mx-auto mb-12"
+        >
+          <span className="inline-block text-accent font-medium text-sm uppercase tracking-wider mb-4">
+            Proceso
+          </span>
+          <h3 className="font-display text-3xl md:text-4xl font-semibold text-foreground mb-6">
+            ¿Cómo <span className="text-primary">trabajamos</span>?
+          </h3>
+          <p className="text-muted-foreground text-lg leading-relaxed">
+            Un proceso claro y acompañado, desde el primer contacto hasta
+            la integración de tu experiencia.
+          </p>
+        </motion.div>
+
+        {/* Process Steps */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          {steps.map((step, index) => (
+            <motion.div
+              key={step.step}
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
+              className="relative group"
+            >
+              {/* Connector Line (desktop) */}
+              {index < steps.length - 1 && (
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  animate={isInView ? { scaleX: 1 } : {}}
+                  transition={{ duration: 0.8, delay: 1.2 + index * 0.2 }}
+                  className="hidden lg:block absolute top-12 left-[60%] w-full h-0.5 bg-gradient-to-r from-primary/50 to-accent/50 origin-left"
+                />
+              )}
+
+              <div className="relative z-10 text-center">
+                {/* Animated Icon Container */}
+                <motion.div
+                  className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-sage-light mb-5 hover-lift cursor-pointer relative overflow-hidden"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {/* Glow ring on hover */}
+                  <div className="absolute inset-0 rounded-full bg-primary/20 scale-0 group-hover:scale-100 transition-transform duration-300" />
+
+                  {/* Rotating ring animation */}
+                  <motion.div
+                    className="absolute inset-1 rounded-full border-2 border-dashed border-primary/30"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  />
+
+                  {/* Icon with unique animation per step */}
+                  {index === 0 && (
+                    <motion.div
+                      animate={{ scale: [1, 1.15, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <step.icon className="text-primary relative z-10" size={32} />
+                    </motion.div>
+                  )}
+                  {index === 1 && (
+                    <motion.div
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <step.icon className="text-primary relative z-10" size={32} />
+                    </motion.div>
+                  )}
+                  {index === 2 && (
+                    <motion.div
+                      animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <step.icon className="text-primary relative z-10" size={32} />
+                    </motion.div>
+                  )}
+                  {index === 3 && (
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1, 1.15, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <step.icon className="text-primary relative z-10" size={32} />
+                    </motion.div>
+                  )}
+                </motion.div>
+
+                {/* Step Number Badge */}
+                <motion.span
+                  className="inline-block px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold mb-3"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  Paso {step.step}
+                </motion.span>
+
+                {/* Content */}
+                <h4 className="font-display text-lg font-semibold text-foreground mb-2">
+                  {step.title}
+                </h4>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 1.2 }}
+          className="text-center"
+        >
+          <p className="text-muted-foreground text-lg mb-6">
+            ¿Listo para dar el primer paso hacia tu transformación?
+          </p>
+          <a href="#reservar" className="btn-accent inline-flex items-center gap-2">
+            <Heart className="w-5 h-5" />
+            Comenzar mi sanación
+          </a>
+        </motion.div>
       </div>
     </section>
   );

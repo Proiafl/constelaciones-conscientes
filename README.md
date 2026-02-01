@@ -1,73 +1,44 @@
-# Welcome to your Lovable project
+# Constelaciones Conscientes
 
-## Project info
+Plataforma web para servicios de terapia sistémica y Constelaciones Familiares.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Características
 
-## How can I edit this code?
+- **Landing Page Completa:** Diseño moderno y responsive con secciones de servicios, testimonios y contacto.
+- **Reservas:** Formulario de contacto integrado con Supabase para gestión de consultas.
+- **Pagos Online:** Integración con MercadoPago para automatizar el cobro de sesiones.
+- **Backend:** Supabase (PostgreSQL + Edge Functions).
 
-There are several ways of editing your application.
+## Tecnologías
 
-**Use Lovable**
+- **Frontend:**
+  - Vite
+  - React + TypeScript
+  - Tailwind CSS
+  - Shadcn UI
+  - Framer Motion
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Backend:**
+  - Supabase Database
+  - Supabase Edge Functions (Deno)
 
-Changes made via Lovable will be committed automatically to this repo.
+## Configuración Local
 
-**Use your preferred IDE**
+1.  Clonar el repositorio.
+2.  Instalar dependencias:
+    ```bash
+    npm install
+    ```
+3.  Configurar variables de entorno `.env`:
+    ```env
+    VITE_SUPABASE_URL=...
+    VITE_SUPABASE_ANON_KEY=...
+    ```
+4.  Iniciar servidor de desarrollo:
+    ```bash
+    npm run dev
+    ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Despliegue
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+El proyecto está listo para desplegar en Vercel, Netlify o cualquier host de estáticos. Asegúrate de configurar las variables de entorno en el panel de control del hosting.

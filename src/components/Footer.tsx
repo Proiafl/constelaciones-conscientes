@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import logoConstelaxio from "@/assets/logo-constelaxio.png";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -9,9 +10,13 @@ const Footer = () => {
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="font-display text-xl font-semibold mb-4">
-              Constelaciones Familiares
-            </h3>
+            <a href="#inicio" className="inline-block mb-4">
+              <img
+                src={logoConstelaxio}
+                alt="Constelaxio"
+                className="h-12 w-auto object-contain brightness-0 invert"
+              />
+            </a>
             <p className="text-background/70 text-sm leading-relaxed">
               Acompañamiento terapéutico profesional para sanar tu historia familiar
               y transformar tu presente.
@@ -39,7 +44,7 @@ const Footer = () => {
               </li>
               <li>
                 <a href="#reservar" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Reservar Cita
+                  Más Información
                 </a>
               </li>
             </ul>
@@ -49,10 +54,10 @@ const Footer = () => {
           <div>
             <h4 className="font-display font-semibold mb-4">Contacto</h4>
             <ul className="space-y-2 text-sm text-background/70">
-              <li>contacto@constelaciones.com</li>
-              <li>+54 11 1234-5678</li>
-              <li>Lunes a Viernes 9:00 - 20:00</li>
-              <li>Sábados 10:00 - 15:00</li>
+              <li>info@constelaxio.com</li>
+              <li>+54 11 7965-2013</li>
+              <li>Lunes a Viernes 18:30 - 20:30</li>
+              <li>Sábados 10:00 - 12:00</li>
             </ul>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import logoConstelaxio from "@/assets/logo-constelaxio.png";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -25,15 +26,18 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-background/95 backdrop-blur-md shadow-soft py-3"
-          : "bg-transparent py-5"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
+        ? "bg-background/95 backdrop-blur-md shadow-soft py-3"
+        : "bg-transparent py-5"
+        }`}
     >
       <div className="container-custom px-4 md:px-8 flex items-center justify-between">
-        <a href="#inicio" className="font-display text-xl md:text-2xl font-semibold text-primary">
-          Constelaciones Familiares
+        <a href="#inicio" className="flex items-center flex-shrink-0 overflow-hidden">
+          <img
+            src={logoConstelaxio}
+            alt="Constelaxio"
+            className="h-8 md:h-10 w-auto max-w-[180px] md:max-w-[220px] object-contain object-left"
+          />
         </a>
 
         {/* Desktop Navigation */}
@@ -48,7 +52,7 @@ const Header = () => {
             </a>
           ))}
           <a href="#reservar" className="btn-primary text-sm py-3 px-6">
-            Reservar Cita
+            Más Información
           </a>
         </nav>
 
@@ -87,7 +91,7 @@ const Header = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="btn-primary text-center mt-4"
               >
-                Reservar Cita
+                Más Información
               </a>
             </nav>
           </motion.div>

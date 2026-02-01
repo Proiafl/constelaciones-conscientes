@@ -48,7 +48,7 @@ const Services = () => {
       title: "Constelación Presencial",
       description:
         "Sesión en consultorio con representantes físicos. La experiencia más inmersiva.",
-      price: "$50.000",
+      price: "$1.000",
       duration: "120 minutos",
       features: ["Total privacidad", "Uso de figuras", "Ambiente cálido"],
       popular: false,
@@ -121,9 +121,10 @@ const Services = () => {
               </p>
 
               <div className="flex items-baseline gap-2 mb-3 sm:mb-4">
-                <span className="font-display text-xl sm:text-2xl font-semibold text-primary">
+                {/* Price hidden as requested */}
+                {/* <span className="font-display text-xl sm:text-2xl font-semibold text-primary">
                   {service.price}
-                </span>
+                </span> */}
                 <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {service.duration}

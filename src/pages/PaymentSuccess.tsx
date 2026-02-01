@@ -34,17 +34,69 @@ const PaymentSuccess = () => {
     };
 
     useEffect(() => {
-        // Simulate loading while verifying payment
-        const timer = setTimeout(() => {
-            setPaymentData({
-                service: serviceNames[serviceType] || "Sesión",
-                bookingUrl: calendarUrl || bookingUrls[serviceType] || defaultCalendarUrl,
-            });
-            setIsLoading(false);
-        }, 1500);
+        const verifyPayment = async () => {
+            if (!paymentId) {
+                setPaymentData({
+                    service: serviceNames[serviceType] || "Sesión",
+                    bookingUrl: calendarUrl || bookingUrls[serviceType] || defaultCalendarUrl,
+                });
+                setIsLoading(false);
+                return;
+            }
 
-        return () => clearTimeout(timer);
-    }, [serviceType]);
+            try {
+                // Poll for payment status (in case webhook is still processing)
+                let attempts = 0;
+                const maxAttempts = 5;
+
+                const checkStatus = async () => {
+                    const { supabase } = await import("@/lib/supabase");
+                    const { data, error } = await supabase
+                        .from("payments")
+                        .select("mp_status, service_name, service_type")
+                        .eq("mp_payment_id", paymentId)
+                        .maybeSingle();
+
+                    if (data?.mp_status === "approved") {
+                        setPaymentData({
+                            service: data.service_name || serviceNames[serviceType] || "Sesión",
+                            bookingUrl: calendarUrl || bookingUrls[serviceType] || defaultCalendarUrl,
+                        });
+                        setIsLoading(false);
+                        return true;
+                    }
+                    return false;
+                };
+
+                // Initial check
+                const isApproved = await checkStatus();
+                if (isApproved) return;
+
+                // Retry loop
+                const interval = setInterval(async () => {
+                    attempts++;
+                    const approved = await checkStatus();
+                    if (approved || attempts >= maxAttempts) {
+                        clearInterval(interval);
+                        // Show data even if not approved yet, but logically it should be if they are here
+                        if (!approved) {
+                            setPaymentData({
+                                service: serviceNames[serviceType] || "Sesión",
+                                bookingUrl: calendarUrl || bookingUrls[serviceType] || defaultCalendarUrl,
+                            });
+                            setIsLoading(false);
+                        }
+                    }
+                }, 2000);
+
+            } catch (err) {
+                console.error("Error verifying payment:", err);
+                setIsLoading(false);
+            }
+        };
+
+        verifyPayment();
+    }, [paymentId, serviceType]);
 
     if (isLoading) {
         return (

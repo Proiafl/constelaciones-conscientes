@@ -1,0 +1,9 @@
+{
+  "has_private_key": true,
+  "private_key_length": 1704,
+  "real_newline_count": 28,
+  "escaped_backslash_n_count": 0,
+  "first_100_chars_escaped": "\"-----BEGIN PRIVATE KEY-----\\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCrGTi20ay17Xm6\\nZ3AAFcF\"",
+  "starts_with_begin": true,
+  "contains_literal_backslash_n": false
+}

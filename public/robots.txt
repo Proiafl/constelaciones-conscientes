@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://constelaciones-conscientes.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 0
+
+# Disallow admin paths (if any)
+Disallow: /admin/
+Disallow: /*.json$
+
+# Allow all images
+User-agent: Googlebot-Image
+Allow: /
+
+# Allow all CSS and JS
+User-agent: *
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.webp$
+Allow: /*.svg$

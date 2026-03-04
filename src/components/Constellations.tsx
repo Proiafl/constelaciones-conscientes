@@ -164,7 +164,7 @@ const Constellations = () => {
                   initial={{ scaleX: 0 }}
                   animate={isInView ? { scaleX: 1 } : {}}
                   transition={{ duration: 0.8, delay: 1.2 + index * 0.2 }}
-                  className="hidden lg:block absolute top-12 left-[60%] w-full h-0.5 bg-gradient-to-r from-primary/50 to-accent/50 origin-left"
+                  className="hidden lg:block absolute top-12 left-[60%] w-full h-0.5 bg-gradient-to-r from-primary/50 to-accent/50 origin-left z-0"
                 />
               )}
 

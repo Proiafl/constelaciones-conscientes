@@ -169,12 +169,7 @@ Deno.serve(async (req: Request) => {
 
     } catch (error: any) {
         console.error("Function Error:", error.message);
-        let debugInfo = "";
-        if (error.message.includes("base64") || error.message.includes("decode")) {
-             const keySnippet = Deno.env.get("GOOGLE_SERVICE_ACCOUNT")?.substring(0, 100) || "MISSING";
-             debugInfo = ` | Key Snippet: ${keySnippet}`;
-        }
-        return new Response(JSON.stringify({ slots: [], error: error.message + debugInfo }), {
+        return new Response(JSON.stringify({ slots: [], error: "DEPLOY_TEST_1: " + error.message }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
         });

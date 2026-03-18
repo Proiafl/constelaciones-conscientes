@@ -108,16 +108,42 @@ Deno.serve(async (req: Request) => {
             );
         }
 
-        // Get Google credentials
+        // 1. Environment Config
         const calendarId = Deno.env.get("GOOGLE_CALENDAR_ID");
         const serviceAccountJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT");
 
-        if (!calendarId || !serviceAccountJson) {
-            throw new Error("Missing Google Calendar configuration");
+        console.log("Calendar ID:", calendarId);
+        if (serviceAccountJson) {
+            console.log("Service Account JSON length:", serviceAccountJson.length);
+            console.log("Service Account JSON snippet:", serviceAccountJson.substring(0, 50) + "...");
+        } else {
+            console.log("Service Account JSON is MISSING");
         }
 
-        const serviceAccount = JSON.parse(serviceAccountJson);
-        const accessToken = await getAccessToken(serviceAccount.client_email, serviceAccount.private_key);
+        if (!calendarId || !serviceAccountJson) {
+            console.error("Missing Google Config");
+            throw new Error("Server misconfiguration: GOOGLE_CALENDAR_ID or GOOGLE_SERVICE_ACCOUNT is missing");
+        }
+
+        let serviceAccount;
+        try {
+            serviceAccount = JSON.parse(serviceAccountJson);
+            console.log("Service Account JSON parsed successfully. Email:", serviceAccount.client_email);
+        } catch (e) {
+            console.error("Failed to parse Service Account JSON:", e.message);
+            throw new Error("Server misconfiguration: Invalid GOOGLE_SERVICE_ACCOUNT JSON format");
+        }
+
+        // 2. Get Google Token
+        let accessToken;
+        try {
+            const accessTokenRaw = await getAccessToken(serviceAccount.client_email, serviceAccount.private_key);
+            accessToken = accessTokenRaw.trim();
+            console.log("Access token obtained successfully");
+        } catch (e) {
+            console.error("Error in getAccessToken:", e.message);
+            throw e;
+        }
 
         // Parse booking date
         const bookingDate = new Date(payment.booking_date);

@@ -29,9 +29,25 @@ const Booking = () => {
     modality: "",
     message: "",
   });
+  const [honeypot, setHoneypot] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Honeypot check for bots
+    if (honeypot) {
+      setIsSuccess(true);
+      toast.success("¡Consulta enviada! Te contactaré pronto.");
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Por favor ingresa un email válido.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -162,6 +178,9 @@ const Booking = () => {
               onSubmit={handleSubmit}
               className="bg-background rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-medium card-glow"
             >
+              <div style={{ display: "none" }} aria-hidden="true">
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+              </div>
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm font-medium">

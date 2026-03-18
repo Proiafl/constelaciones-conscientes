@@ -1,0 +1,19 @@
+Testing get-availability...
+ERROR_DETAILS_START
+Response status code does not indicate success: 404 (Not Found).
+[31;1mInvalidOperation: [0mC:\Users\Administrator\Projects\constelaciones-conscientes\test-functions.ps1:17:9[0m
+[31;1m[0m[36;1mLine |[0m
+[31;1m[0m[36;1m[36;1m  17 | [0m         [36;1m$reader = New-Object System.IO.StreamReader($_.Exception.Resp[0m .[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mMethod invocation failed because[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m[31;1m[36;1m     | [31;1m[System.Net.Http.HttpResponseMessage] does not contain a method named 'GetResponseStream'.[0m
+
+Testing create-payment...
+Error in create-payment:
+Response status code does not indicate success: 404 (Not Found).
+[31;1mInvalidOperation: [0mC:\Users\Administrator\Projects\constelaciones-conscientes\test-functions.ps1:43:9[0m
+[31;1m[0m[36;1mLine |[0m
+[31;1m[0m[36;1m[36;1m  43 | [0m         [36;1m$reader = New-Object System.IO.StreamReader($_.Exception.Resp[0m .[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mMethod invocation failed because[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m[31;1m[36;1m     | [31;1m[System.Net.Http.HttpResponseMessage] does not contain a method named 'GetResponseStream'.[0m

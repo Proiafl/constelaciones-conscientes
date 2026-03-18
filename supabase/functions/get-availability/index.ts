@@ -7,6 +7,8 @@ const corsHeaders = {
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+import { checkRateLimit, sanitizeInput } from "../_shared/utils.ts";
+
 interface AvailabilityRequest {
     date: string; // YYYY-MM-DD
     serviceSlug: string;
@@ -45,11 +47,22 @@ async function getAccessToken(serviceAccountEmail: string, privateKey: string) {
     return data.access_token;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
     try {
-        const { date, serviceSlug } = await req.json() as AvailabilityRequest;
+        // Enforce Rate Limiting (max 15 requests per minute for availability checks)
+        const rateLimit = checkRateLimit(req, 15, 60000);
+        if (!rateLimit.allowed) {
+            return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+                status: 429,
+                headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": Math.ceil(rateLimit.resetIn / 1000).toString() }
+            });
+        }
+
+        const body = await req.json() as AvailabilityRequest;
+        const date = sanitizeInput(body.date);
+        const serviceSlug = sanitizeInput(body.serviceSlug);
 
         if (!date) throw new Error("Date is required");
 
@@ -73,7 +86,7 @@ Deno.serve(async (req) => {
         const timeMin = new Date(`${date}T00:00:00-03:00`).toISOString();
         const timeMax = new Date(`${date}T23:59:59-03:00`).toISOString();
 
-        // 4. Fetch 'freebusy' (Note: Case-sensitive 'freeBusy')
+        // 4. Fetch 'freeBusy' (Note: Case-sensitive 'freeBusy')
         const fbRes = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
             method: "POST",
             headers: {

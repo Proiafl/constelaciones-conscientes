@@ -47,6 +47,7 @@ export const PaymentModal = ({
         email: "",
         phone: "",
     });
+    const [honeypot, setHoneypot] = useState("");
 
     useEffect(() => {
         if (isOpen) {
@@ -119,10 +120,24 @@ export const PaymentModal = ({
             }
             setStep(2);
         } else if (step === 2) {
+            // Honeypot bot protection
+            if (honeypot) {
+                toast.error("Por favor completa los campos obligatorios");
+                return;
+            }
+
             if (!formData.name || !formData.email) {
                 toast.error("Por favor completa los campos obligatorios");
                 return;
             }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                toast.error("Por favor ingresa un email válido");
+                return;
+            }
+
             setStep(3);
         }
     };
@@ -133,6 +148,12 @@ export const PaymentModal = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Honeypot bot protection
+        if (honeypot) {
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -259,6 +280,9 @@ export const PaymentModal = ({
 
                     {step === 2 && (
                         <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                            <div style={{ display: "none" }} aria-hidden="true">
+                                <input type="text" name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+                            </div>
                             <div className="bg-secondary/30 rounded-xl p-4 flex items-center gap-3 mb-6">
                                 <CalendarIcon className="w-5 h-5 text-primary" />
                                 <div>

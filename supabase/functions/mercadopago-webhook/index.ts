@@ -1,195 +1,145 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-import { SignJWT, importPKCS8 } from "https://deno.land/x/jose@v4.14.4/index.ts";
+import { checkRateLimit, corsHeaders } from "../_shared/utils.ts";
 
-const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-// Google Auth Helpers
-async function getAccessToken(serviceAccountEmail: string, privateKey: string) {
-    const alg = "RS256";
-    const pkcs8 = await importPKCS8(privateKey, alg);
-
-    const jwt = await new SignJWT({
-        scope: "https://www.googleapis.com/auth/calendar",
-    })
-        .setProtectedHeader({ alg })
-        .setIssuer(serviceAccountEmail)
-        .setSubject(serviceAccountEmail)
-        .setAudience("https://oauth2.googleapis.com/token")
-        .setIssuedAt()
-        .setExpirationTime("1h")
-        .sign(pkcs8);
-
-    const res = await fetch("https://oauth2.googleapis.com/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-            grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-            assertion: jwt,
-        }),
-    });
-
-    const data = await res.json();
-    return data.access_token;
-}
-
-// Function to create Google Calendar Event
-async function createCalendarEvent(payment: any, accessToken: string) {
-    const calendarId = Deno.env.get("GOOGLE_CALENDAR_ID");
-    if (!calendarId) {
-        console.error("Missing GOOGLE_CALENDAR_ID");
-        return null;
+Deno.serve(async (req: Request) => {
+    // Handle CORS preflight
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
     }
-
-    if (!payment.booking_date) {
-        console.log("No booking date found for payment", payment.id);
-        return null;
-    }
-
-    const startTime = new Date(payment.booking_date);
-    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Default 1 hour duration
-
-    const event = {
-        summary: `Sesión: ${payment.service_name} - ${payment.customer_name}`,
-        description: `Cliente: ${payment.customer_name}\nEmail: ${payment.customer_email}\nTel: ${payment.customer_phone || "N/A"}\nServicio: ${payment.service_name}`,
-        start: { dateTime: startTime.toISOString() },
-        end: { dateTime: endTime.toISOString() },
-        attendees: [{ email: payment.customer_email }],
-    };
-
-    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`, {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(event),
-    });
-
-    if (!res.ok) {
-        console.error("Failed to create calendar event", await res.text());
-        return null;
-    }
-
-    const data = await res.json();
-    return data.htmlLink;
-}
-
-Deno.serve(async (req) => {
-    if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
     try {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const accessToken = Deno.env.get("ACCESS_TOKEN_PRD") || Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
+        // Enforce Rate Limiting (max 60 requests per minute for webhooks)
+        const rateLimit = checkRateLimit(req, 60, 60000);
+        if (!rateLimit.allowed) {
+            return new Response(JSON.stringify({ error: "Too many requests" }), {
+                status: 429,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+        }
+        const url = new URL(req.url);
+        const topic = url.searchParams.get("topic") || url.searchParams.get("type");
+        const id = url.searchParams.get("id") || url.searchParams.get("data.id");
 
+        let notificationData;
+        try {
+            notificationData = await req.json();
+        } catch (e) {
+            notificationData = {};
+        }
+
+        console.log("Webhook received:", JSON.stringify({
+            query: Object.fromEntries(url.searchParams),
+            body: notificationData
+        }));
+
+        // Extract notification ID and type
+        const notificationId = notificationData?.data?.id || notificationData?.id || id;
+        const notificationType = notificationData?.type || topic;
+
+        if (!notificationId || notificationType !== "payment") {
+            console.log("Ignored non-payment notification");
+            return new Response(JSON.stringify({ message: "Ignored" }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        // Initialize Supabase and MP Access
+        const accessToken = Deno.env.get("ACCESS_TOKEN_PRD") || Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
+        if (!accessToken) throw new Error("Missing ACCESS_TOKEN_PRD");
+
+        const supabaseUrl = Deno.env.get("SELF_HOSTED_DB_URL") || Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SELF_HOSTED_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-        // Parse data from query or body
-        const url = new URL(req.url);
-        let id = url.searchParams.get("data.id") || url.searchParams.get("id");
-        let type = url.searchParams.get("type") || url.searchParams.get("topic");
+        const supabaseFnUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseFn = createClient(supabaseFnUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-        // If not in URL, check body
-        if (!id || !type) {
-            try {
-                const body = await req.json();
-                console.log("Webhook body:", JSON.stringify(body));
-                id = id || body.data?.id || body.id;
-                type = type || body.type || body.topic;
-            } catch (e) {
-                console.log("No JSON body found or could not parse.");
-            }
-        }
-
-        console.log(`Notification received: type=${type}, id=${id}`);
-
-        if (type === "payment" && id) {
-            const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${id}`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
-
-            if (!mpResponse.ok) {
-                const errText = await mpResponse.text();
-                console.error(`MP API Error for payment ${id}:`, errText);
-                return new Response(JSON.stringify({ error: "MP API Error" }), { status: 200, headers: corsHeaders });
-            }
-
-            const paymentData = await mpResponse.json();
-            const status = paymentData.status;
-            const preferenceId = paymentData.preference_id;
-
-            console.log(`Processing payment ${id}. Status: ${status}, Preference: ${preferenceId}`);
-
-            // First retrieve the payment record to get booking details
-            const { data: currentPayment, error: fetchError } = await supabase
-                .from("payments")
-                .select("*")
-                .eq("mp_preference_id", preferenceId)
-                .single();
-
-            if (fetchError) {
-                console.error("Error fetching payment record:", fetchError);
-                // Don't throw, try to update anyway if possible, but we need booking_date
-            }
-
-            let calendarUrl = null;
-
-            // Create Calendar Event if approved and not already created
-            if (status === "approved" && currentPayment && !currentPayment.calendly_event_url) {
-                try {
-                    const serviceAccountJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT");
-                    if (serviceAccountJson) {
-                        const serviceAccount = JSON.parse(serviceAccountJson);
-                        const googleToken = await getAccessToken(serviceAccount.client_email, serviceAccount.private_key);
-                        calendarUrl = await createCalendarEvent(currentPayment, googleToken);
-                        console.log("Calendar event created:", calendarUrl);
-                    }
-                } catch (calError: any) {
-                    console.error("Error creating calendar event:", calError);
-                }
-            }
-
-            // Update payment record
-            const updateData: any = {
-                mp_status: status,
-                mp_payment_id: id.toString(),
-                mp_status_detail: paymentData.status_detail,
-                mp_payment_method: paymentData.payment_method_id,
-                updated_at: new Date().toISOString()
-            };
-
-            if (calendarUrl) {
-                updateData.calendly_event_url = calendarUrl; // Reusing this field for Google Calendar URL
-            }
-
-            const { data: updated, error: updateError } = await supabase
-                .from("payments")
-                .update(updateData)
-                .eq("mp_preference_id", preferenceId)
-                .select();
-
-            if (updateError) {
-                console.error("DB Update Error:", updateError);
-                throw updateError;
-            }
-
-            console.log(`Update result for preference ${preferenceId}:`, JSON.stringify(updated));
-        }
-
-        return new Response(JSON.stringify({ received: true }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
+        // Fetch Payment Details from MercadoPago
+        const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${notificationId}`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
         });
-    } catch (error) {
-        console.error("Webhook Global Error:", error.message);
-        return new Response(JSON.stringify({ error: error.message }), {
+
+        if (!mpResponse.ok) {
+            console.error("Failed to fetch payment from MP:", await mpResponse.text());
+            throw new Error("Could not fetch payment details");
+        }
+
+        const paymentData = await mpResponse.json();
+        const status = paymentData.status;
+        const externalReference = paymentData.external_reference;
+        const metadata = paymentData.metadata || {};
+        const supabasePaymentId = metadata.supabase_payment_id || externalReference;
+
+        console.log("Processing payment:", {
+            id: notificationId,
+            status,
+            supabasePaymentId,
+            externalReference
+        });
+
+        if (!supabasePaymentId) {
+            console.warn("No linked Supabase Payment ID found");
+            return new Response(JSON.stringify({ message: "No ID match" }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+        }
+
+        // Update Supabase payment record
+        const { error: updateError } = await supabase
+            .from("payments")
+            .update({
+                mp_payment_id: notificationId,
+                mp_status: status,
+                mp_payment_method: paymentData.payment_method_id || null,
+                mp_status_detail: paymentData.status_detail || null,
+            })
+            .eq("id", supabasePaymentId);
+
+        if (updateError) {
+            console.error("Error updating payment in Supabase:", updateError);
+            throw updateError;
+        }
+
+        console.log("Payment updated successfully");
+
+        // If payment approved, create calendar event
+        if (status === "approved") {
+            console.log("Payment approved, creating calendar event...");
+
+            try {
+                const { data: eventData, error: eventError } = await supabase.functions.invoke(
+                    "create-calendar-event",
+                    {
+                        body: { payment_id: supabasePaymentId }
+                    }
+                );
+
+                if (eventError) {
+                    console.error("Error creating calendar event:", eventError);
+                } else {
+                    console.log("Calendar event created:", eventData);
+                }
+            } catch (err) {
+                console.error("Failed to invoke create-calendar-event:", err);
+            }
+        }
+
+        return new Response(JSON.stringify({ message: "Payment processed" }), {
+            status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200, // MP requires 200 to stop retrying even if we fail internally
+        });
+
+    } catch (error: any) {
+        console.error("Webhook Error:", error.message);
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
     }
 });

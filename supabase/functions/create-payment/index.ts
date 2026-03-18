@@ -1,11 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { checkRateLimit, sanitizeInput, isValidEmail, corsHeaders } from "../_shared/utils.ts";
 
 interface PaymentRequest {
     serviceSlug: string;
@@ -18,15 +13,36 @@ Deno.serve(async (req: Request) => {
     if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
     try {
+        // Enforce Rate Limiting (max 10 requests per minute)
+        const rateLimit = checkRateLimit(req, 10, 60000);
+        if (!rateLimit.allowed) {
+            return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+                status: 429,
+                headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": Math.ceil(rateLimit.resetIn / 1000).toString() }
+            });
+        }
+
         const accessToken = Deno.env.get("ACCESS_TOKEN_PRD") || Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
         if (!accessToken) throw new Error("Missing ACCESS_TOKEN_PRD");
 
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabaseUrl = Deno.env.get("SELF_HOSTED_DB_URL") || Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SELF_HOSTED_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
         const body: PaymentRequest & { bookingDate?: string; bookingTime?: string; origin?: string } = await req.json();
-        const { serviceSlug, customerName, customerEmail, customerPhone, bookingDate, bookingTime, origin } = body;
+
+        // Sanitize and Validate Inputs
+        const serviceSlug = sanitizeInput(body.serviceSlug);
+        const customerName = sanitizeInput(body.customerName);
+        const customerEmail = sanitizeInput(body.customerEmail).toLowerCase();
+        const customerPhone = sanitizeInput(body.customerPhone);
+        const bookingDate = sanitizeInput(body.bookingDate);
+        const bookingTime = sanitizeInput(body.bookingTime);
+        const origin = sanitizeInput(body.origin);
+
+        if (!isValidEmail(customerEmail)) {
+            throw new Error("Invalid email format");
+        }
 
         const { data: service, error: serviceError } = await supabase
             .from("services")
@@ -43,7 +59,7 @@ Deno.serve(async (req: Request) => {
         siteUrl = siteUrl.replace(/\/$/, "");
 
         // Webhook URL (Must be a public URL)
-        const functionUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
+        const functionUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mercadopago-webhook`;
 
         // Construct metadata
         const metadata = {
@@ -53,7 +69,35 @@ Deno.serve(async (req: Request) => {
             booking_time: bookingTime
         };
 
-        const successUrl = `${siteUrl}/pago-exitoso?service=${serviceSlug}&calendar=${encodeURIComponent(service.calendly_url || "")}`;
+        // Construct full booking ISO string if date/time exist
+        let bookingIso = null;
+        if (bookingDate && bookingTime) {
+            bookingIso = new Date(`${bookingDate}T${bookingTime}:00-03:00`).toISOString();
+        }
+
+        // Create payment record first (before MP preference)
+        const { data: payment, error: paymentError } = await supabase
+            .from("payments")
+            .insert({
+                customer_name: customerName,
+                customer_email: customerEmail,
+                customer_phone: customerPhone || null,
+                service_type: serviceSlug,
+                service_name: service.name,
+                amount: service.price,
+                mp_status: "pending",
+                booking_date: bookingIso,
+                metadata: metadata
+            })
+            .select()
+            .single();
+
+        if (paymentError || !payment) {
+            throw new Error("Failed to create payment record");
+        }
+
+        // Now construct URLs with payment ID
+        const successUrl = `${siteUrl}/pago-exitoso?payment_id=${payment.id}&service=${serviceSlug}`;
         const failureUrl = `${siteUrl}/pago-fallido?service=${serviceSlug}`;
         const pendingUrl = `${siteUrl}/pago-pendiente?service=${serviceSlug}`;
 
@@ -77,59 +121,42 @@ Deno.serve(async (req: Request) => {
                 pending: pendingUrl,
             },
             notification_url: functionUrl,
-            external_reference: `${serviceSlug}_${Date.now()}`,
-            metadata: metadata,
+            external_reference: payment.id,
+            metadata: {
+                ...metadata,
+                supabase_payment_id: payment.id
+            },
         };
 
-        const mpResponse = await fetch(
-            "https://api.mercadopago.com/checkout/preferences",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify(preferenceData),
-            }
-        );
+        const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(preferenceData),
+        });
 
         if (!mpResponse.ok) {
             const errorText = await mpResponse.text();
-            throw new Error(`MercadoPago validation failed: ${errorText}`);
+            console.error("MercadoPago Error:", errorText);
+            throw new Error(`MercadoPago API Error: ${errorText}`);
         }
 
         const preference = await mpResponse.json();
 
-        // Construct full booking ISO string if date/time exist
-        let bookingIso = null;
-        if (bookingDate && bookingTime) {
-            bookingIso = new Date(`${bookingDate}T${bookingTime}:00-03:00`).toISOString();
-        }
-
-        // Save to DB initially as pending
-        const { data: payment } = await supabase
+        // Update payment with MP preference ID
+        await supabase
             .from("payments")
-            .insert({
-                customer_name: customerName,
-                customer_email: customerEmail,
-                customer_phone: customerPhone || null,
-                service_type: serviceSlug,
-                service_name: service.name,
-                amount: service.price,
-                mp_preference_id: preference.id,
-                mp_status: "pending",
-                booking_date: bookingIso,
-                metadata: metadata
-            })
-            .select()
-            .single();
+            .update({ mp_preference_id: preference.id })
+            .eq("id", payment.id);
 
         return new Response(
             JSON.stringify({
                 preference_id: preference.id,
                 init_point: preference.init_point,
                 sandbox_init_point: preference.sandbox_init_point,
-                payment_id: payment?.id
+                payment_id: payment.id
             }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

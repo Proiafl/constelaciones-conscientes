@@ -77,7 +77,12 @@ const About = () => {
               Tu guía en el camino hacia la{" "}
               <span className="text-primary">sanación familiar</span>
             </h2>
-
+            <p className="text-muted-foreground text-base sm:text-lg mb-4 sm:mb-6 leading-relaxed">
+              Soy terapeuta especializada en Constelaciones Familiares con más de una
+              década de experiencia acompañando a personas en su proceso de sanación.
+              Mi formación incluye estudios en diversas escuelas de constelaciones,
+              siempre buscando las herramientas más efectivas para ayudarte.
+            </p>
             <p className="text-muted-foreground text-base sm:text-lg mb-6 sm:mb-8 leading-relaxed">
               Creo firmemente que cada familia tiene su propia historia y su propio
               camino hacia el equilibrio. Mi rol es acompañarte con respeto, empatía

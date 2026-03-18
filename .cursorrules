@@ -1,0 +1,8 @@
+# Development Premises
+
+These rules must be STRICTLY adhered to when developing inside these projects:
+
+1. **Secrets Management**: No dejes las keys expuestas. Usa Edge Functions y guarda las keys siempre en variables de entorno.
+2. **Security & Input Validation**: Validación de inputs. Sanitize all inputs rigurosamente (ej. usando frameworks de validación como Zod).
+3. **Authentication**: Delega la autenticación usando Auth de Supabase (nunca implementes auth manual; utiliza las políticas de RLS y `supabase.auth.getUser()`).
+4. **Rate Limiting**: Limita la cantidad de peticiones que se pueden hacer para evitar abusos. Aplica Rate Limiting a todas las API routes y edge functions.

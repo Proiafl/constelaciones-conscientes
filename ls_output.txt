@@ -1,0 +1,11 @@
+total 44
+drwxr-xr-x 8 root root 4096 Mar 17 23:15 .
+drwxr-xr-x 8 root root 4096 Feb 22 04:12 ..
+drwxr-xr-x 2 root root 4096 Feb 26 03:01 ai-chat
+drwxr-xr-x 2 root root 4096 Feb 26 03:01 ai-credit-evaluator
+drwxr-xr-x 2 root root 4096 Feb 26 01:40 backfill-embeddings
+drwxr-xr-x 2 root root 4096 Feb 22 04:12 hello
+-rw-rw-rw- 1 root root 5502 Mar  5 23:32 index.ts
+drwxr-xr-x 2 root root 4096 Feb 22 04:12 main
+drwxr-xr-x 2 root root 4096 Feb 26 01:40 search-properties
+-rw-rw-rw- 1 root root 1931 Mar  5 23:31 utils.ts

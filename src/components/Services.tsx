@@ -23,7 +23,7 @@ const Services = () => {
       description:
         "Sesiones personalizadas desde tu hogar con total privacidad y profundidad.",
       price: "$40.000",
-      duration: "90 minutos",
+      duration: "60 minutos",
       features: ["Vía Zoom o Google Meet", "Grabación disponible", "Material de apoyo"],
       popular: true,
       ctaText: "Agendar ahora",
@@ -48,8 +48,8 @@ const Services = () => {
       title: "Constelación Presencial",
       description:
         "Sesión en consultorio con representantes físicos. La experiencia más inmersiva.",
-      price: "$1.000",
-      duration: "90 minutos",
+      price: "$45.000",
+      duration: "120 minutos",
       features: ["Total privacidad", "Uso de figuras", "Ambiente cálido"],
       popular: false,
       ctaText: "Agendar ahora",

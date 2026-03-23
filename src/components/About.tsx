@@ -18,7 +18,7 @@ const About = () => {
 
   const stats = [
     { icon: Users, value: "+50", label: "Sesiones realizadas" },
-    { icon: Award, value: "+5", label: "Años de experiencia" },
+    { icon: Award, value: "+3", label: "Años de experiencia" },
     { icon: Heart, value: "100%", label: "Compromiso" },
     { icon: Star, value: "5.0", label: "Calificación" },
   ];
@@ -78,10 +78,10 @@ const About = () => {
               <span className="text-primary">sanación familiar</span>
             </h2>
             <p className="text-muted-foreground text-base sm:text-lg mb-4 sm:mb-6 leading-relaxed">
-              Soy terapeuta especializada en Constelaciones Familiares con más de una
-              década de experiencia acompañando a personas en su proceso de sanación.
-              Mi formación incluye estudios en diversas escuelas de constelaciones,
-              siempre buscando las herramientas más efectivas para ayudarte.
+              Soy Facilitadora egresada del Centro Latinoamericano de Constelaciones Familiares (CLCF) con más de Tres años de experiencia acompañando a personas en su proceso de sanación.
+            </p>
+            <p className="text-muted-foreground text-base sm:text-lg mb-4 sm:mb-6 leading-relaxed">
+              Llegue a las constelaciones familiares buscando una herramienta de sanacion en un momento trascendental de mi vida como la perdida física de mi madre y desde entonces se convirtió en una pasión y un proposito de vida.
             </p>
             <p className="text-muted-foreground text-base sm:text-lg mb-6 sm:mb-8 leading-relaxed">
               Creo firmemente que cada familia tiene su propia historia y su propio

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Video, Users, Sparkles, Star, Clock, Check, Calendar, FileText } from "lucide-react";
+import { Video, Users, Sparkles, Star, Clock, Check, Calendar, MessageCircleQuestion } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PaymentModal from "@/components/PaymentModal";
 
@@ -39,8 +39,9 @@ const Services = () => {
       duration: "4 horas",
       features: ["Grupos reducidos", "Presencial u online", "Privacidad y confidencialidad"],
       popular: false,
-      ctaText: "Completar Formulario",
-      ctaIcon: FileText,
+      ctaText: "Solicitar más Información",
+      ctaIcon: MessageCircleQuestion,
+      scrollToBooking: true,
     },
     {
       slug: "presencial",
@@ -58,6 +59,17 @@ const Services = () => {
   ];
 
   const handleBooking = (service: any) => {
+    if (service.scrollToBooking) {
+      // Preselect "taller" in the booking form via sessionStorage
+      sessionStorage.setItem("preselect_service", service.slug);
+      const bookingSection = document.getElementById("reservar");
+      if (bookingSection) {
+        bookingSection.scrollIntoView({ behavior: "smooth" });
+        // Dispatch event so Booking component can react
+        window.dispatchEvent(new CustomEvent("preselect-service", { detail: service.slug }));
+      }
+      return;
+    }
     setSelectedService({
       slug: service.slug,
       name: service.title,

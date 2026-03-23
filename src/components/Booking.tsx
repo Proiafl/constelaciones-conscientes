@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Calendar, Clock, Video, MapPin, Send, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,22 @@ const Booking = () => {
     message: "",
   });
   const [honeypot, setHoneypot] = useState("");
+
+  // Preselect service if navigated from Services section
+  useEffect(() => {
+    const stored = sessionStorage.getItem("preselect_service");
+    if (stored) {
+      setFormData((prev) => ({ ...prev, service: stored }));
+      sessionStorage.removeItem("preselect_service");
+    }
+
+    const handler = (e: Event) => {
+      const slug = (e as CustomEvent).detail;
+      setFormData((prev) => ({ ...prev, service: slug }));
+    };
+    window.addEventListener("preselect-service", handler);
+    return () => window.removeEventListener("preselect-service", handler);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

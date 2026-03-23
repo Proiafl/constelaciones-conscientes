@@ -39,8 +39,8 @@ const Services = () => {
       duration: "4 horas",
       features: ["Grupos reducidos", "Presencial u online", "Privacidad y confidencialidad"],
       popular: false,
-      ctaText: "Agendar ahora",
-      ctaIcon: Calendar,
+      ctaText: "Completar Formulario",
+      ctaIcon: FileText,
     },
     {
       slug: "presencial",

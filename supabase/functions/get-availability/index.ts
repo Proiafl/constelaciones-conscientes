@@ -95,7 +95,8 @@ Deno.serve(async (req: Request) => {
         // 2. Get Google Token
         let accessToken;
         try {
-            const accessTokenRaw = await getAccessToken(serviceAccount.client_email, serviceAccount.private_key);
+            const privateKeyFixed = serviceAccount.private_key.replace(/\\n/g, '\n');
+            const accessTokenRaw = await getAccessToken(serviceAccount.client_email, privateKeyFixed);
             accessToken = accessTokenRaw.trim();
             console.log("Access token obtained successfully");
         } catch (e) {
